@@ -502,7 +502,7 @@ _saved_exactcombinations = {} # saved exact combinations for 'BindLigand'.
 # the items are how many times the combination was accessed and the
 # information about the best binding position.
 #----------------------------------------------------------------------
-def BindLigand(prot, protconf, ligand, ligandconf, numsaved = 5000, numsavedexact = 5000):
+def BindLigand(prot, protconf, ligand, ligandconf, interaction_energies=interactions.miyazawa_jernigan, numsaved = 5000, numsavedexact = 5000):
     """Finds the lowest energy for a ligand binding to a lattice protein.
 
     Call is: '(be, xshift, yshift, conf) = BindLigand(prot, protconf, ligand, 
@@ -518,6 +518,8 @@ def BindLigand(prot, protconf, ligand, ligandconf, numsaved = 5000, numsavedexac
         being bound to the protein.
     'ligandconf' is a string specifying the conformation of 'ligand', in
         the same format as 'protconf'.
+    'interaction_energies' specifies the interaction energies between
+        residues. By default, this is interactions.miyazawa_jernigan.
     'be' is returned as the binding energy of 'ligand' to 'prot' in
         the lowest energy binding position.  This is computed by searching
         over all translational and rotational possible positions of the
@@ -682,7 +684,7 @@ def BindLigand(prot, protconf, ligand, ligandconf, numsaved = 5000, numsavedexac
         be = 0.0   # initialize binding energy to zero
         for (ires, jres) in pairlist:  # loop over interacting residues pairs
             try:
-                be += self._interaction_energies["%s%s" % (prot[ires], ligand[jres])]
+                be += interaction_energies["%s%s" % (prot[ires], ligand[jres])]
             except KeyError:
                 raise ConformationsError, "Unrecognized residue in protein %r or ligand %r." % (prot, ligand)
         if returntup == None or be < returntup[0]:
