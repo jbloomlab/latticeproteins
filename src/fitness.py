@@ -5,7 +5,8 @@
 
 Written by Jesse Bloom, 2004."""
 #----------------------------------------------------------------------
-import math, conformations, sys
+import math, sys
+import latticeproteins.conformations
 #----------------------------------------------------------------------
 class FitnessError(Exception):
     """Error computing lattice protein fitness."""

@@ -38,7 +38,7 @@ miyazawa_jernigan = {
 # miyazawa_jernigan_disulfide is like miyazawa_jernigan, except that the
 # energy of a CC bond is increased and CX bonds (X != C) are slightly decreased
 miyazawa_jernigan_disulfide = {}
-for (aas, e) in miyazawa_jernigan.iteritems():
+for (aas, e) in miyazawa_jernigan.items():
     (r1, r2) = (aas[0], aas[1])
     if r1 == 'C' and r2 == 'C':
         miyazawa_jernigan_disulfide[aas] = e - 50.0

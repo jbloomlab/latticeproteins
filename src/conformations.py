@@ -5,7 +5,14 @@
 
 Written by Jesse Bloom, 2004."""
 #-----------------------------------------------------------------------
-import math, interactions, sys, cPickle, os
+import math, sys, os
+from latticeproteins.interactions import miyazawa_jernigan
+
+# Python 3 compatibility
+try:
+    import pickle as pickle
+except ImportError:
+    import pickle
 #----------------------------------------------------------------------
 class ConformationsError(Exception):
     """Error finding or storing a conformation."""
@@ -15,12 +22,12 @@ class ConformationsError(Exception):
 # 'contactlooper'.  'True' means we try to do this.
 _loop_in_C = True 
 if _loop_in_C:
-    import contactlooper
-#----------------------------------------------------------------------
+    from latticeproteins.contactlooper import *
+#------------------------------------------------------------------------
 class Conformations(object):
     """A class for storing all of the conformations of a lattice protein."""
     #-------------------------------------------------------------------
-    def __init__(self, length, database_dir, interaction_energies=interactions.miyazawa_jernigan):
+    def __init__(self, length, database_dir, interaction_energies=miyazawa_jernigan):
         """Creates a list of conformations for a protein of specified length.
 
         Call is: 'c = Conformations(length, database_file)
@@ -50,14 +57,14 @@ class Conformations(object):
                 didntfindone = True
         if foundone and not didntfindone:
             # return existing values
-            self._length = cPickle.load(open("%s/%d_length.pickle" % (database_dir, length)))
+            self._length = pickle.load(open("%s/%d_length.pickle" % (database_dir, length)))
             if self._length != length:
                 raise ValueError("Length mismatch.")
-            self._numconformations = cPickle.load(open("%s/%d_numconformations.pickle" % (database_dir, length)))
-            self._contactsets = cPickle.load(open("%s/%d_contactsets.pickle" % (database_dir, length)))
-            self._contactsetdegeneracy = cPickle.load(open("%s/%d_contactsetdegeneracy.pickle" % (database_dir, length)))
-            self._contactsetconformation = cPickle.load(open("%s/%d_contactsetconformation.pickle" % (database_dir, length)))
-            self._numcontactsets = cPickle.load(open("%s/%d_numcontactsets.pickle" % (database_dir, length)))
+            self._numconformations = pickle.load(open("%s/%d_numconformations.pickle" % (database_dir, length)))
+            self._contactsets = pickle.load(open("%s/%d_contactsets.pickle" % (database_dir, length)))
+            self._contactsetdegeneracy = pickle.load(open("%s/%d_contactsetdegeneracy.pickle" % (database_dir, length)))
+            self._contactsetconformation = pickle.load(open("%s/%d_contactsetconformation.pickle" % (database_dir, length)))
+            self._numcontactsets = pickle.load(open("%s/%d_numcontactsets.pickle" % (database_dir, length)))
             # sort the contact set information so that the conformations
             # with the most contacts come first
             n = len(self._contactsets)
@@ -247,12 +254,12 @@ class Conformations(object):
         self._contactsetconformation = [decorated_list[i][3] for i in range(len(decorated_list))]
         #
         # store the conformations data in the database
-        cPickle.dump(self._length, open("%s/%d_length.pickle" % (database_dir, length), 'w'), protocol=2)
-        cPickle.dump(self._numconformations, open("%s/%d_numconformations.pickle" % (database_dir, length), 'w'), protocol=2)
-        cPickle.dump(self._contactsets, open("%s/%d_contactsets.pickle" % (database_dir, length), 'w'), protocol=2)
-        cPickle.dump(self._contactsetdegeneracy, open("%s/%d_contactsetdegeneracy.pickle" % (database_dir, length), 'w'), protocol=2)
-        cPickle.dump(self._contactsetconformation, open("%s/%d_contactsetconformation.pickle" % (database_dir, length), 'w'), protocol=2)
-        cPickle.dump(self._numcontactsets, open("%s/%d_numcontactsets.pickle" % (database_dir, length), 'w'), protocol=2)
+        pickle.dump(self._length, open("%s/%d_length.pickle" % (database_dir, length), 'w'), protocol=2)
+        pickle.dump(self._numconformations, open("%s/%d_numconformations.pickle" % (database_dir, length), 'w'), protocol=2)
+        pickle.dump(self._contactsets, open("%s/%d_contactsets.pickle" % (database_dir, length), 'w'), protocol=2)
+        pickle.dump(self._contactsetdegeneracy, open("%s/%d_contactsetdegeneracy.pickle" % (database_dir, length), 'w'), protocol=2)
+        pickle.dump(self._contactsetconformation, open("%s/%d_contactsetconformation.pickle" % (database_dir, length), 'w'), protocol=2)
+        pickle.dump(self._numcontactsets, open("%s/%d_numcontactsets.pickle" % (database_dir, length), 'w'), protocol=2)
     #------------------------------------------------------------------
     def Length(self):
         """Returns the length of the protein these conformations are for.
@@ -502,7 +509,7 @@ _saved_exactcombinations = {} # saved exact combinations for 'BindLigand'.
 # the items are how many times the combination was accessed and the
 # information about the best binding position.
 #----------------------------------------------------------------------
-def BindLigand(prot, protconf, ligand, ligandconf, interaction_energies=interactions.miyazawa_jernigan, numsaved = 5000, numsavedexact = 5000):
+def BindLigand(prot, protconf, ligand, ligandconf, interaction_energies=miyazawa_jernigan, numsaved = 5000, numsavedexact = 5000):
     """Finds the lowest energy for a ligand binding to a lattice protein.
 
     Call is: '(be, xshift, yshift, conf) = BindLigand(prot, protconf, ligand, 
