@@ -126,7 +126,7 @@ static PyObject *TargetLooper(PyObject *self, PyObject *args) {
     static char *c_targetconf; 
     char *targetconfstring;
     // Parse the arguments 
-    if (! PyArg_ParseTuple(args, "O!O!O!dO!O!id", &PyList_Type, &res_interactions, &PyList_Type, &contactsets, &PyList_Type, &contactsetdegeneracy, &temp, &PyString_Type, &targetconf, &PyList_Type, &contactsetconformation, &use_dGf_cutoff, &dGf_cutoff)) { 
+    if (! PyArg_ParseTuple(args, "O!O!O!dO!O!id", &PyList_Type, &res_interactions, &PyList_Type, &contactsets, &PyList_Type, &contactsetdegeneracy, &temp, &PyUnicode_Type, &targetconf, &PyList_Type, &contactsetconformation, &use_dGf_cutoff, &dGf_cutoff)) { 
         PyErr_SetString(ContactLooperError, "Error parsing arguments."); 
         return NULL;
     }
@@ -170,11 +170,11 @@ static PyObject *TargetLooper(PyObject *self, PyObject *args) {
         }
     }
     // find the target string if we have a new target
-    if ((c_targetconf == NULL) || (strcmp(c_targetconf, PyString_AS_STRING(targetconf)))) {
+    if ((c_targetconf == NULL) || (strcmp(c_targetconf, PyUnicode_AsASCIIString(targetconf)))) {
         if (c_targetconf != NULL) {
             free(c_targetconf);
         }
-        targetconfstring = PyString_AS_STRING(targetconf);
+        targetconfstring = PyUnicode_AsASCIIString(targetconf);
         c_targetconf = (char *) malloc((strlen(targetconfstring) + 1) * sizeof(char));
         strcpy(c_targetconf, targetconfstring);
         targetconformationindex = 0;
@@ -184,7 +184,7 @@ static PyObject *TargetLooper(PyObject *self, PyObject *args) {
                 PyErr_SetString(ContactLooperError, "Did not find target conformations."); 
                 return NULL;
             }
-            if ((c_contactsetdegeneracy[i] == 1) && ! strcmp(c_targetconf, PyString_AS_STRING(PyList_GET_ITEM(contactsetconformation, i)))) {
+            if ((c_contactsetdegeneracy[i] == 1) && ! strcmp(c_targetconf, PyUnicode_AsASCIIString(PyList_GET_ITEM(contactsetconformation, i)))) {
                 targetconformationindex = i;
             }
             i += 1;

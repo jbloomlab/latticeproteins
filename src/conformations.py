@@ -113,7 +113,7 @@ class Conformations(object):
         #
         # Now do some error checking on input variables
         if not (isinstance(self._length, int) and self._length >= 2):
-            raise ConformationsError, "Invalid 'length' of %r." % self._length
+            raise ConformationsError("Invalid 'length' of %r." % self._length)
         #
         # The initial generation of conformations uses the variable
         # 'contactsets' which is a dictionary as described below.  Once
@@ -332,19 +332,19 @@ class Conformations(object):
             pass
         # do some error checking on the input variables
         if len(seq) != self._length:
-            raise ConformationsError, "Invalid 'seq' length: is %r but should be %r." % (len(seq), self._length)
+            raise ConformationsError("Invalid 'seq' length: is %r but should be %r." % (len(seq), self._length))
         if target_conf != None:
             if not (isinstance(target_conf, str) and len(target_conf) == len(seq) - 1):
-                raise ConformationsError, "Invalid 'target_conf' of %r." % target_conf
+                raise ConformationsError("Invalid 'target_conf' of %r." % target_conf)
                 if dGf_cutoff != None:
                     if not isinstance(dGf_cutoff, (int, float)):
-                        raise ConformationsError, "Invalid 'dGf_cutoff' of %s." % dGf_cutoff
+                        raise ConformationsError("Invalid 'dGf_cutoff' of %s." % dGf_cutoff)
         try:
             temp = float(temp)
             if temp <= 0.0:
-                raise ConformationsError, "'temp' is <= 0: %r." % temp
+                raise ConformationsError("'temp' is <= 0: %r." % temp)
         except KeyError:
-            raise ConformationsError, "Invalid 'temp' of %r." % temp
+            raise ConformationsError("Invalid 'temp' of %r." % temp)
         # create 'res_interactions'.  'res_interactions[j]' holds the energy
         # for the interaction 'j' as specified in 'self._contactsets[i][j]'
         res_interactions = [0.0 for i in range(self._length**2)]
@@ -402,7 +402,7 @@ class Conformations(object):
                         minE = e_contactset
                         numcontacts = len(contactsets[i]) 
             if minE == None:
-                raise ConformationsError, "'target_conf' is not a unique conformation."
+                raise ConformationsError("'target_conf' is not a unique conformation.")
             conf = target_conf
         if dGf_cutoff != None and target_conf and partitionsum < 0:
             dGf = None
@@ -429,7 +429,7 @@ class Conformations(object):
             as strings of 'U', 'R', 'L', and 'D' as described in 
             'FoldSequence'."""
         if not (isinstance(numcontacts, int) and numcontacts >= 0):
-            raise ConformationsError, "Invalid 'numcontacts' of %r." % numcontacts
+            raise ConformationsError("Invalid 'numcontacts' of %r." % numcontacts)
         clist = []
         for i in range(len(self._contactsets)):
             if self._contactsetdegeneracy[i] == 1:
@@ -469,7 +469,7 @@ class Conformations(object):
                 if isinstance(contacts, int) and contacts >= 0:
                     n = 0
                 else:
-                    raise ConformationsError, "Invalid 'contacts' of %r." % contacts
+                    raise ConformationsError("Invalid 'contacts' of %r." % contacts)
         return n
     #------------------------------------------------------------------
     def NumContactSets(self, contacts = None):
@@ -491,7 +491,7 @@ class Conformations(object):
                 if isinstance(contacts, int) and contacts >= 0:
                     n = 0
                 else:
-                    raise Conformationserror, "Invalid 'contacts' of %r." % contacts
+                    raise Conformationserror("Invalid 'contacts' of %r." % contacts)
 #---------------------------------------------------------------------------
 _saved_combinations = {} # saved combinations for 'BindLigand'.
 # The keys are the 2-tuples '(protconf, ligandconf)' and the items
@@ -630,14 +630,14 @@ def BindLigand(prot, protconf, ligand, ligandconf, interaction_energies=interact
                     y += dy[c]
                     ires += 1
                 except KeyError:
-                    raise ConformationsError, "Invalid ligand conformation in %r." % ligandconf
+                    raise ConformationsError("Invalid ligand conformation in %r." % ligandconf)
                 liganddict[(x, y)] = ires
                 minligandx = min(x, minligandx)
                 maxligandx = max(x, maxligandx)
                 minligandy = min(y, minligandy)
                 maxligandy = max(y, maxligandy)
             if not (len(liganddict) == len(ligand) == ires + 1):
-                raise ConformationsError, "Overlapping residues in ligand conformation %r." % ligandconf
+                raise ConformationsError("Overlapping residues in ligand conformation %r." % ligandconf)
             return (conf, liganddict, minligandx, maxligandx, minligandy, maxligandy)
         #-------------------------------------------------------------
         ires = x = y = minprotx = maxprotx = minproty = maxproty = 0
@@ -648,14 +648,14 @@ def BindLigand(prot, protconf, ligand, ligandconf, interaction_energies=interact
                 y += dy[c]
                 ires += 1
             except KeyError:
-                raise ConformationsError, "Invalid protein conformation in %r." % protconf
+                raise ConformationsError("Invalid protein conformation in %r." % protconf)
             protdict[(x, y)] = ires
             minprotx = min(x, minprotx)
             maxprotx = max(x, maxprotx)
             minproty = min(y, minproty)
             maxproty = max(y, maxproty)
         if not (len(protdict) == len(prot) == ires + 1):
-            raise ConformationsError, "Overlapping residues in protein conformation %r." % protconf
+            raise ConformationsError("Overlapping residues in protein conformation %r." % protconf)
         # Now build all possible combinations.  Loop over all ligand rotations:
         combinations = []
         conf = ligandconf
@@ -686,7 +686,7 @@ def BindLigand(prot, protconf, ligand, ligandconf, interaction_energies=interact
             try:
                 be += interaction_energies["%s%s" % (prot[ires], ligand[jres])]
             except KeyError:
-                raise ConformationsError, "Unrecognized residue in protein %r or ligand %r." % (prot, ligand)
+                raise ConformationsError("Unrecognized residue in protein %r or ligand %r." % (prot, ligand))
         if returntup == None or be < returntup[0]:
             returntup = (be, xshift, yshift, conf)
     _saved_exactcombinations[exactsavekey] = (0, returntup)
@@ -733,9 +733,9 @@ def PrintConformation(seq, conf, file = sys.stdout, latex_format = False, ligand
     dy = {'U':2, 'R':0, 'D':-2, 'L':0}
     # Error check
     if len(seq) != len(conf) + 1:
-        raise ConformationsError, "Lengths of 'seq' and 'conf' are incompatible."
+        raise ConformationsError("Lengths of 'seq' and 'conf' are incompatible.")
     if len(seq) < 1:
-        raise ConformationsError, "Sequence 'seq' is empty."
+        raise ConformationsError("Sequence 'seq' is empty.")
     # create a dictionary listing coordinates with residues at those sites
     # This dictionary is 'residue_coords'
     x = y = minx = maxx = miny = maxy = 0
@@ -763,11 +763,11 @@ def PrintConformation(seq, conf, file = sys.stdout, latex_format = False, ligand
         try:
             (ligandseq, ligandconf, xshift, yshift) = ligand_tup
         except (ValueError, TypeError):
-            raise ConformationsError, "Invalid 'ligand_tup' of %r." % ligand_tup
+            raise ConformationsError("Invalid 'ligand_tup' of %r." % ligand_tup)
         if len(ligandseq) != len(ligandconf) + 1:
-            raise ConformationsError, "Ligand sequence of %r and ligand conformation of %r are of incompatible lengths." % (ligandseq, ligandconf)
+            raise ConformationsError("Ligand sequence of %r and ligand conformation of %r are of incompatible lengths." % (ligandseq, ligandconf))
         if not (isinstance(xshift, int) and isinstance(yshift, int)):
-            raise ConformationsError, "Invalid 'xshift', 'yshift' pair of %r, %r." % (xshift, yshift)
+            raise ConformationsError("Invalid 'xshift', 'yshift' pair of %r, %r." % (xshift, yshift))
         # make 'ligandseq' all lower case, as we will print lower case letters
         ligandseq = ''.join(ligandseq).lower()
         # now add the ligand residues/bonds to 'residue_coords'
