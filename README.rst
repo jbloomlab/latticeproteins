@@ -20,7 +20,7 @@ The package is written in Python.
 
 `Version 0.2`_ has been ported to Python 3 by `Zachary Sailer`_.
 
-, and should work with recent versions 2.*. It also includes a few C extensions, and so compilation requires the ``gcc`` compiler. To install the package from source::
+The program uses a few C extensions, and so compilation requires the ``gcc`` compiler. To install the package from source::
 
     python setup.py build
     sudo python setup.py install
