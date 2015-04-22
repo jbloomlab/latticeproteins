@@ -10,7 +10,7 @@ from latticeproteins.interactions import miyazawa_jernigan
 
 # Python 3 compatibility
 try:
-    import pickle as pickle
+    import cPickle as pickle
 except ImportError:
     import pickle
 #----------------------------------------------------------------------
@@ -23,6 +23,15 @@ class ConformationsError(Exception):
 _loop_in_C = True 
 if _loop_in_C:
     from latticeproteins.contactlooper import *
+    
+    
+class PickleProtocolError(Exception):
+    """Error is pickle version is too old. """
+
+PROTOCOL = pickle.HIGHEST_PROTOCOL
+if PROTOCOL < 2:
+    raise PickleProtocolError("Version of pickle is outdated for this package. ")
+    
 #------------------------------------------------------------------------
 class Conformations(object):
     """A class for storing all of the conformations of a lattice protein."""
@@ -230,7 +239,7 @@ class Conformations(object):
         #
         # Now use 'contactsets' to generate 'self._contactsets', 
         # 'self._contactsetdegeneracy', and 'self._contactsetconformation'
-        for (cs, n_or_conf) in contactsets.iteritems():
+        for (cs, n_or_conf) in contactsets.items():
             # convert 'cs' to the appropriate list
             clist = [int(x) for x in cs.split()]
             self._contactsets.append(clist)
@@ -254,12 +263,12 @@ class Conformations(object):
         self._contactsetconformation = [decorated_list[i][3] for i in range(len(decorated_list))]
         #
         # store the conformations data in the database
-        pickle.dump(self._length, open("%s/%d_length.pickle" % (database_dir, length), 'w'), protocol=2)
-        pickle.dump(self._numconformations, open("%s/%d_numconformations.pickle" % (database_dir, length), 'w'), protocol=2)
-        pickle.dump(self._contactsets, open("%s/%d_contactsets.pickle" % (database_dir, length), 'w'), protocol=2)
-        pickle.dump(self._contactsetdegeneracy, open("%s/%d_contactsetdegeneracy.pickle" % (database_dir, length), 'w'), protocol=2)
-        pickle.dump(self._contactsetconformation, open("%s/%d_contactsetconformation.pickle" % (database_dir, length), 'w'), protocol=2)
-        pickle.dump(self._numcontactsets, open("%s/%d_numcontactsets.pickle" % (database_dir, length), 'w'), protocol=2)
+        pickle.dump(self._length, open("%s/%d_length.pickle" % (database_dir, length), 'wb'), protocol=PROTOCOL)
+        pickle.dump(self._numconformations, open("%s/%d_numconformations.pickle" % (database_dir, length), 'wb'), protocol=PROTOCOL)
+        pickle.dump(self._contactsets, open("%s/%d_contactsets.pickle" % (database_dir, length), 'wb'), protocol=PROTOCOL)
+        pickle.dump(self._contactsetdegeneracy, open("%s/%d_contactsetdegeneracy.pickle" % (database_dir, length), 'wb'), protocol=PROTOCOL)
+        pickle.dump(self._contactsetconformation, open("%s/%d_contactsetconformation.pickle" % (database_dir, length), 'wb'), protocol=PROTOCOL)
+        pickle.dump(self._numcontactsets, open("%s/%d_numcontactsets.pickle" % (database_dir, length), 'wb'), protocol=PROTOCOL)
     #------------------------------------------------------------------
     def Length(self):
         """Returns the length of the protein these conformations are for.
@@ -323,7 +332,7 @@ class Conformations(object):
         # if we have more saved sequences than 'numsaved', get rid of them
         if numsaved < len(self._foldedsequences):
             decorateditems = []
-            for i in self._foldedsequences.iteritems():
+            for i in self._foldedsequences.items():
                 decorateditems.append((i[1][0], i))
             self._foldedsequences = {}
             decorateditems.sort()
@@ -369,7 +378,7 @@ class Conformations(object):
         # first for the case where 'target_conf' is 'None':
         if target_conf == None:
             if _loop_in_C: # use the fast 'contactlooper' C-extension
-                (minE, ibest, partitionsum) = contactlooper.NoTargetLooper(res_interactions, contactsets, contactsetdegeneracy, float(temp))
+                (minE, ibest, partitionsum) = NoTargetLooper(res_interactions, contactsets, contactsetdegeneracy, float(temp))
             else: # do the looping in python
                 # initially set minimum to the first contact set:
                 minE = 0.0
@@ -392,9 +401,9 @@ class Conformations(object):
         else:
             if _loop_in_C: # use the fast 'contactlooper' C-extension
                 if dGf_cutoff != None:
-                    (minE, ibest, partitionsum) = contactlooper.TargetLooper(res_interactions, contactsets, contactsetdegeneracy, float(temp), target_conf, contactsetconformation, 1, float(dGf_cutoff))
+                    (minE, ibest, partitionsum) = TargetLooper(res_interactions, contactsets, contactsetdegeneracy, float(temp), target_conf, contactsetconformation, 1, float(dGf_cutoff))
                 else:
-                    (minE, ibest, partitionsum) = contactlooper.TargetLooper(res_interactions, contactsets, contactsetdegeneracy, float(temp), target_conf, contactsetconformation, 0, 0.0)
+                    (minE, ibest, partitionsum) = TargetLooper(res_interactions, contactsets, contactsetdegeneracy, float(temp), target_conf, contactsetconformation, 0, 0.0)
                 numcontacts = len(contactsets[ibest])
             else: # do the looping in python
                 minE = conf = numcontacts = None # lowest energy sequence properties 
@@ -564,7 +573,7 @@ def BindLigand(prot, protconf, ligand, ligandconf, interaction_energies=miyazawa
     # If we have more saved exact combinations than 'numsavedexact',
     # get rid of half of them.
     if numsavedexact < len(_saved_exactcombinations):
-        decorateditems = [(i[1][0], i) for i in _saved_exactcombinations.iteritems()]
+        decorateditems = [(i[1][0], i) for i in _saved_exactcombinations.items()]
         decorateditems.sort()
         decorateditems.reverse()
         for i in decorateditems[int(numsaved / 2) : ]:
@@ -593,7 +602,7 @@ def BindLigand(prot, protconf, ligand, ligandconf, interaction_energies=miyazawa
     # the already saved combinations.
     # If we have more saved combinations than 'numsaved', get rid of half of them
     if numsaved < len(_saved_combinations):
-        decorateditems = [(i[1][0], i) for i in _saved_combinations.iteritems()]
+        decorateditems = [(i[1][0], i) for i in _saved_combinations.items()]
         decorateditems.sort()
         decorateditems.reverse()
         for i in decorateditems[int(numsaved / 2) : ]:
@@ -671,7 +680,7 @@ def BindLigand(prot, protconf, ligand, ligandconf, interaction_energies=miyazawa
             for xshift in range(minprotx - maxligandx - 1, maxprotx + 1 - minligandx):
                 for yshift in range(minproty - maxligandy - 1, maxproty + 1 - minligandy):
                     pairlist = []
-                    for ((x, y), jres) in liganddict.iteritems():
+                    for ((x, y), jres) in liganddict.items():
                         x += xshift
                         y += yshift
                         if (x, y) in protdict: # we have overlap
@@ -862,7 +871,7 @@ def PrintConformation(seq, conf, file = sys.stdout, latex_format = False, ligand
         horizbond = "--- &" # horizontal bonds
         emptybond = " &"  # empty bond
         endline = " \\\\\n" # end of line
-        for (key, symbol) in residue_coords.iteritems():
+        for (key, symbol) in residue_coords.items():
             if symbol == '|':
                 residue_coords[key] = vertbond
             elif symbol == '-':
