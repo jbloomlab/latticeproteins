@@ -22,7 +22,7 @@ class ConformationsError(Exception):
 # 'contactlooper'.  'True' means we try to do this.
 _loop_in_C = True 
 if _loop_in_C:
-    from latticeproteins.contactlooper import *
+    from latticeproteins.contactlooper import NoTargetLooper, TargetLooper
     
     
 class PickleProtocolError(Exception):
@@ -61,19 +61,23 @@ class Conformations(object):
         for prop in object_properties:
             f = "%s/%d%s.pickle" % (database_dir, length, prop)
             if os.path.isfile(f):
-                foundone = True
+                try:
+                    val = pickle.load(open("%s/%d_length.pickle" % (database_dir, length), 'rb'))
+                    foundone = True
+                except ValueError:
+                    foundone = False
             else:
                 didntfindone = True
         if foundone and not didntfindone:
             # return existing values
-            self._length = pickle.load(open("%s/%d_length.pickle" % (database_dir, length)))
+            self._length = pickle.load(open("%s/%d_length.pickle" % (database_dir, length), 'rb'))
             if self._length != length:
                 raise ValueError("Length mismatch.")
-            self._numconformations = pickle.load(open("%s/%d_numconformations.pickle" % (database_dir, length)))
-            self._contactsets = pickle.load(open("%s/%d_contactsets.pickle" % (database_dir, length)))
-            self._contactsetdegeneracy = pickle.load(open("%s/%d_contactsetdegeneracy.pickle" % (database_dir, length)))
-            self._contactsetconformation = pickle.load(open("%s/%d_contactsetconformation.pickle" % (database_dir, length)))
-            self._numcontactsets = pickle.load(open("%s/%d_numcontactsets.pickle" % (database_dir, length)))
+            self._numconformations = pickle.load(open("%s/%d_numconformations.pickle" % (database_dir, length), 'rb'))
+            self._contactsets = pickle.load(open("%s/%d_contactsets.pickle" % (database_dir, length), 'rb'))
+            self._contactsetdegeneracy = pickle.load(open("%s/%d_contactsetdegeneracy.pickle" % (database_dir, length), 'rb'))
+            self._contactsetconformation = pickle.load(open("%s/%d_contactsetconformation.pickle" % (database_dir, length), 'rb'))
+            self._numcontactsets = pickle.load(open("%s/%d_numcontactsets.pickle" % (database_dir, length), 'rb'))
             # sort the contact set information so that the conformations
             # with the most contacts come first
             n = len(self._contactsets)
