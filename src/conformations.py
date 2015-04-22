@@ -5,7 +5,14 @@
 
 Written by Jesse Bloom, 2004."""
 #-----------------------------------------------------------------------
-import math, interactions, sys, cPickle, os
+import math, sys, os
+from latticeproteins.interactions import miyazawa_jernigan
+
+# Python 3 compatibility
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 #----------------------------------------------------------------------
 class ConformationsError(Exception):
     """Error finding or storing a conformation."""
@@ -15,12 +22,21 @@ class ConformationsError(Exception):
 # 'contactlooper'.  'True' means we try to do this.
 _loop_in_C = True 
 if _loop_in_C:
-    import contactlooper
-#----------------------------------------------------------------------
+    from latticeproteins.contactlooper import NoTargetLooper, TargetLooper
+    
+    
+class PickleProtocolError(Exception):
+    """Error is pickle version is too old. """
+
+PROTOCOL = pickle.HIGHEST_PROTOCOL
+if PROTOCOL < 2:
+    raise PickleProtocolError("Version of pickle is outdated for this package. ")
+    
+#------------------------------------------------------------------------
 class Conformations(object):
     """A class for storing all of the conformations of a lattice protein."""
     #-------------------------------------------------------------------
-    def __init__(self, length, database_dir, interaction_energies=interactions.miyazawa_jernigan):
+    def __init__(self, length, database_dir, interaction_energies=miyazawa_jernigan):
         """Creates a list of conformations for a protein of specified length.
 
         Call is: 'c = Conformations(length, database_file)
@@ -45,19 +61,23 @@ class Conformations(object):
         for prop in object_properties:
             f = "%s/%d%s.pickle" % (database_dir, length, prop)
             if os.path.isfile(f):
-                foundone = True
+                try:
+                    val = pickle.load(open("%s/%d_length.pickle" % (database_dir, length), 'rb'))
+                    foundone = True
+                except ValueError:
+                    foundone = False
             else:
                 didntfindone = True
         if foundone and not didntfindone:
             # return existing values
-            self._length = cPickle.load(open("%s/%d_length.pickle" % (database_dir, length)))
+            self._length = pickle.load(open("%s/%d_length.pickle" % (database_dir, length), 'rb'))
             if self._length != length:
                 raise ValueError("Length mismatch.")
-            self._numconformations = cPickle.load(open("%s/%d_numconformations.pickle" % (database_dir, length)))
-            self._contactsets = cPickle.load(open("%s/%d_contactsets.pickle" % (database_dir, length)))
-            self._contactsetdegeneracy = cPickle.load(open("%s/%d_contactsetdegeneracy.pickle" % (database_dir, length)))
-            self._contactsetconformation = cPickle.load(open("%s/%d_contactsetconformation.pickle" % (database_dir, length)))
-            self._numcontactsets = cPickle.load(open("%s/%d_numcontactsets.pickle" % (database_dir, length)))
+            self._numconformations = pickle.load(open("%s/%d_numconformations.pickle" % (database_dir, length), 'rb'))
+            self._contactsets = pickle.load(open("%s/%d_contactsets.pickle" % (database_dir, length), 'rb'))
+            self._contactsetdegeneracy = pickle.load(open("%s/%d_contactsetdegeneracy.pickle" % (database_dir, length), 'rb'))
+            self._contactsetconformation = pickle.load(open("%s/%d_contactsetconformation.pickle" % (database_dir, length), 'rb'))
+            self._numcontactsets = pickle.load(open("%s/%d_numcontactsets.pickle" % (database_dir, length), 'rb'))
             # sort the contact set information so that the conformations
             # with the most contacts come first
             n = len(self._contactsets)
@@ -113,7 +133,7 @@ class Conformations(object):
         #
         # Now do some error checking on input variables
         if not (isinstance(self._length, int) and self._length >= 2):
-            raise ConformationsError, "Invalid 'length' of %r." % self._length
+            raise ConformationsError("Invalid 'length' of %r." % self._length)
         #
         # The initial generation of conformations uses the variable
         # 'contactsets' which is a dictionary as described below.  Once
@@ -223,7 +243,7 @@ class Conformations(object):
         #
         # Now use 'contactsets' to generate 'self._contactsets', 
         # 'self._contactsetdegeneracy', and 'self._contactsetconformation'
-        for (cs, n_or_conf) in contactsets.iteritems():
+        for (cs, n_or_conf) in contactsets.items():
             # convert 'cs' to the appropriate list
             clist = [int(x) for x in cs.split()]
             self._contactsets.append(clist)
@@ -247,12 +267,12 @@ class Conformations(object):
         self._contactsetconformation = [decorated_list[i][3] for i in range(len(decorated_list))]
         #
         # store the conformations data in the database
-        cPickle.dump(self._length, open("%s/%d_length.pickle" % (database_dir, length), 'w'), protocol=2)
-        cPickle.dump(self._numconformations, open("%s/%d_numconformations.pickle" % (database_dir, length), 'w'), protocol=2)
-        cPickle.dump(self._contactsets, open("%s/%d_contactsets.pickle" % (database_dir, length), 'w'), protocol=2)
-        cPickle.dump(self._contactsetdegeneracy, open("%s/%d_contactsetdegeneracy.pickle" % (database_dir, length), 'w'), protocol=2)
-        cPickle.dump(self._contactsetconformation, open("%s/%d_contactsetconformation.pickle" % (database_dir, length), 'w'), protocol=2)
-        cPickle.dump(self._numcontactsets, open("%s/%d_numcontactsets.pickle" % (database_dir, length), 'w'), protocol=2)
+        pickle.dump(self._length, open("%s/%d_length.pickle" % (database_dir, length), 'wb'), protocol=PROTOCOL)
+        pickle.dump(self._numconformations, open("%s/%d_numconformations.pickle" % (database_dir, length), 'wb'), protocol=PROTOCOL)
+        pickle.dump(self._contactsets, open("%s/%d_contactsets.pickle" % (database_dir, length), 'wb'), protocol=PROTOCOL)
+        pickle.dump(self._contactsetdegeneracy, open("%s/%d_contactsetdegeneracy.pickle" % (database_dir, length), 'wb'), protocol=PROTOCOL)
+        pickle.dump(self._contactsetconformation, open("%s/%d_contactsetconformation.pickle" % (database_dir, length), 'wb'), protocol=PROTOCOL)
+        pickle.dump(self._numcontactsets, open("%s/%d_numcontactsets.pickle" % (database_dir, length), 'wb'), protocol=PROTOCOL)
     #------------------------------------------------------------------
     def Length(self):
         """Returns the length of the protein these conformations are for.
@@ -316,7 +336,7 @@ class Conformations(object):
         # if we have more saved sequences than 'numsaved', get rid of them
         if numsaved < len(self._foldedsequences):
             decorateditems = []
-            for i in self._foldedsequences.iteritems():
+            for i in self._foldedsequences.items():
                 decorateditems.append((i[1][0], i))
             self._foldedsequences = {}
             decorateditems.sort()
@@ -332,19 +352,19 @@ class Conformations(object):
             pass
         # do some error checking on the input variables
         if len(seq) != self._length:
-            raise ConformationsError, "Invalid 'seq' length: is %r but should be %r." % (len(seq), self._length)
+            raise ConformationsError("Invalid 'seq' length: is %r but should be %r." % (len(seq), self._length))
         if target_conf != None:
             if not (isinstance(target_conf, str) and len(target_conf) == len(seq) - 1):
-                raise ConformationsError, "Invalid 'target_conf' of %r." % target_conf
+                raise ConformationsError("Invalid 'target_conf' of %r." % target_conf)
                 if dGf_cutoff != None:
                     if not isinstance(dGf_cutoff, (int, float)):
-                        raise ConformationsError, "Invalid 'dGf_cutoff' of %s." % dGf_cutoff
+                        raise ConformationsError("Invalid 'dGf_cutoff' of %s." % dGf_cutoff)
         try:
             temp = float(temp)
             if temp <= 0.0:
-                raise ConformationsError, "'temp' is <= 0: %r." % temp
+                raise ConformationsError("'temp' is <= 0: %r." % temp)
         except KeyError:
-            raise ConformationsError, "Invalid 'temp' of %r." % temp
+            raise ConformationsError("Invalid 'temp' of %r." % temp)
         # create 'res_interactions'.  'res_interactions[j]' holds the energy
         # for the interaction 'j' as specified in 'self._contactsets[i][j]'
         res_interactions = [0.0 for i in range(self._length**2)]
@@ -362,7 +382,7 @@ class Conformations(object):
         # first for the case where 'target_conf' is 'None':
         if target_conf == None:
             if _loop_in_C: # use the fast 'contactlooper' C-extension
-                (minE, ibest, partitionsum) = contactlooper.NoTargetLooper(res_interactions, contactsets, contactsetdegeneracy, float(temp))
+                (minE, ibest, partitionsum) = NoTargetLooper(res_interactions, contactsets, contactsetdegeneracy, float(temp))
             else: # do the looping in python
                 # initially set minimum to the first contact set:
                 minE = 0.0
@@ -385,9 +405,9 @@ class Conformations(object):
         else:
             if _loop_in_C: # use the fast 'contactlooper' C-extension
                 if dGf_cutoff != None:
-                    (minE, ibest, partitionsum) = contactlooper.TargetLooper(res_interactions, contactsets, contactsetdegeneracy, float(temp), target_conf, contactsetconformation, 1, float(dGf_cutoff))
+                    (minE, ibest, partitionsum) = TargetLooper(res_interactions, contactsets, contactsetdegeneracy, float(temp), target_conf, contactsetconformation, 1, float(dGf_cutoff))
                 else:
-                    (minE, ibest, partitionsum) = contactlooper.TargetLooper(res_interactions, contactsets, contactsetdegeneracy, float(temp), target_conf, contactsetconformation, 0, 0.0)
+                    (minE, ibest, partitionsum) = TargetLooper(res_interactions, contactsets, contactsetdegeneracy, float(temp), target_conf, contactsetconformation, 0, 0.0)
                 numcontacts = len(contactsets[ibest])
             else: # do the looping in python
                 minE = conf = numcontacts = None # lowest energy sequence properties 
@@ -402,7 +422,7 @@ class Conformations(object):
                         minE = e_contactset
                         numcontacts = len(contactsets[i]) 
             if minE == None:
-                raise ConformationsError, "'target_conf' is not a unique conformation."
+                raise ConformationsError("'target_conf' is not a unique conformation.")
             conf = target_conf
         if dGf_cutoff != None and target_conf and partitionsum < 0:
             dGf = None
@@ -429,7 +449,7 @@ class Conformations(object):
             as strings of 'U', 'R', 'L', and 'D' as described in 
             'FoldSequence'."""
         if not (isinstance(numcontacts, int) and numcontacts >= 0):
-            raise ConformationsError, "Invalid 'numcontacts' of %r." % numcontacts
+            raise ConformationsError("Invalid 'numcontacts' of %r." % numcontacts)
         clist = []
         for i in range(len(self._contactsets)):
             if self._contactsetdegeneracy[i] == 1:
@@ -469,7 +489,7 @@ class Conformations(object):
                 if isinstance(contacts, int) and contacts >= 0:
                     n = 0
                 else:
-                    raise ConformationsError, "Invalid 'contacts' of %r." % contacts
+                    raise ConformationsError("Invalid 'contacts' of %r." % contacts)
         return n
     #------------------------------------------------------------------
     def NumContactSets(self, contacts = None):
@@ -491,7 +511,7 @@ class Conformations(object):
                 if isinstance(contacts, int) and contacts >= 0:
                     n = 0
                 else:
-                    raise Conformationserror, "Invalid 'contacts' of %r." % contacts
+                    raise Conformationserror("Invalid 'contacts' of %r." % contacts)
 #---------------------------------------------------------------------------
 _saved_combinations = {} # saved combinations for 'BindLigand'.
 # The keys are the 2-tuples '(protconf, ligandconf)' and the items
@@ -502,7 +522,7 @@ _saved_exactcombinations = {} # saved exact combinations for 'BindLigand'.
 # the items are how many times the combination was accessed and the
 # information about the best binding position.
 #----------------------------------------------------------------------
-def BindLigand(prot, protconf, ligand, ligandconf, interaction_energies=interactions.miyazawa_jernigan, numsaved = 5000, numsavedexact = 5000):
+def BindLigand(prot, protconf, ligand, ligandconf, interaction_energies=miyazawa_jernigan, numsaved = 5000, numsavedexact = 5000):
     """Finds the lowest energy for a ligand binding to a lattice protein.
 
     Call is: '(be, xshift, yshift, conf) = BindLigand(prot, protconf, ligand, 
@@ -557,7 +577,7 @@ def BindLigand(prot, protconf, ligand, ligandconf, interaction_energies=interact
     # If we have more saved exact combinations than 'numsavedexact',
     # get rid of half of them.
     if numsavedexact < len(_saved_exactcombinations):
-        decorateditems = [(i[1][0], i) for i in _saved_exactcombinations.iteritems()]
+        decorateditems = [(i[1][0], i) for i in _saved_exactcombinations.items()]
         decorateditems.sort()
         decorateditems.reverse()
         for i in decorateditems[int(numsaved / 2) : ]:
@@ -586,7 +606,7 @@ def BindLigand(prot, protconf, ligand, ligandconf, interaction_energies=interact
     # the already saved combinations.
     # If we have more saved combinations than 'numsaved', get rid of half of them
     if numsaved < len(_saved_combinations):
-        decorateditems = [(i[1][0], i) for i in _saved_combinations.iteritems()]
+        decorateditems = [(i[1][0], i) for i in _saved_combinations.items()]
         decorateditems.sort()
         decorateditems.reverse()
         for i in decorateditems[int(numsaved / 2) : ]:
@@ -630,14 +650,14 @@ def BindLigand(prot, protconf, ligand, ligandconf, interaction_energies=interact
                     y += dy[c]
                     ires += 1
                 except KeyError:
-                    raise ConformationsError, "Invalid ligand conformation in %r." % ligandconf
+                    raise ConformationsError("Invalid ligand conformation in %r." % ligandconf)
                 liganddict[(x, y)] = ires
                 minligandx = min(x, minligandx)
                 maxligandx = max(x, maxligandx)
                 minligandy = min(y, minligandy)
                 maxligandy = max(y, maxligandy)
             if not (len(liganddict) == len(ligand) == ires + 1):
-                raise ConformationsError, "Overlapping residues in ligand conformation %r." % ligandconf
+                raise ConformationsError("Overlapping residues in ligand conformation %r." % ligandconf)
             return (conf, liganddict, minligandx, maxligandx, minligandy, maxligandy)
         #-------------------------------------------------------------
         ires = x = y = minprotx = maxprotx = minproty = maxproty = 0
@@ -648,14 +668,14 @@ def BindLigand(prot, protconf, ligand, ligandconf, interaction_energies=interact
                 y += dy[c]
                 ires += 1
             except KeyError:
-                raise ConformationsError, "Invalid protein conformation in %r." % protconf
+                raise ConformationsError("Invalid protein conformation in %r." % protconf)
             protdict[(x, y)] = ires
             minprotx = min(x, minprotx)
             maxprotx = max(x, maxprotx)
             minproty = min(y, minproty)
             maxproty = max(y, maxproty)
         if not (len(protdict) == len(prot) == ires + 1):
-            raise ConformationsError, "Overlapping residues in protein conformation %r." % protconf
+            raise ConformationsError("Overlapping residues in protein conformation %r." % protconf)
         # Now build all possible combinations.  Loop over all ligand rotations:
         combinations = []
         conf = ligandconf
@@ -664,7 +684,7 @@ def BindLigand(prot, protconf, ligand, ligandconf, interaction_energies=interact
             for xshift in range(minprotx - maxligandx - 1, maxprotx + 1 - minligandx):
                 for yshift in range(minproty - maxligandy - 1, maxproty + 1 - minligandy):
                     pairlist = []
-                    for ((x, y), jres) in liganddict.iteritems():
+                    for ((x, y), jres) in liganddict.items():
                         x += xshift
                         y += yshift
                         if (x, y) in protdict: # we have overlap
@@ -686,7 +706,7 @@ def BindLigand(prot, protconf, ligand, ligandconf, interaction_energies=interact
             try:
                 be += interaction_energies["%s%s" % (prot[ires], ligand[jres])]
             except KeyError:
-                raise ConformationsError, "Unrecognized residue in protein %r or ligand %r." % (prot, ligand)
+                raise ConformationsError("Unrecognized residue in protein %r or ligand %r." % (prot, ligand))
         if returntup == None or be < returntup[0]:
             returntup = (be, xshift, yshift, conf)
     _saved_exactcombinations[exactsavekey] = (0, returntup)
@@ -733,9 +753,9 @@ def PrintConformation(seq, conf, file = sys.stdout, latex_format = False, ligand
     dy = {'U':2, 'R':0, 'D':-2, 'L':0}
     # Error check
     if len(seq) != len(conf) + 1:
-        raise ConformationsError, "Lengths of 'seq' and 'conf' are incompatible."
+        raise ConformationsError("Lengths of 'seq' and 'conf' are incompatible.")
     if len(seq) < 1:
-        raise ConformationsError, "Sequence 'seq' is empty."
+        raise ConformationsError("Sequence 'seq' is empty.")
     # create a dictionary listing coordinates with residues at those sites
     # This dictionary is 'residue_coords'
     x = y = minx = maxx = miny = maxy = 0
@@ -763,11 +783,11 @@ def PrintConformation(seq, conf, file = sys.stdout, latex_format = False, ligand
         try:
             (ligandseq, ligandconf, xshift, yshift) = ligand_tup
         except (ValueError, TypeError):
-            raise ConformationsError, "Invalid 'ligand_tup' of %r." % ligand_tup
+            raise ConformationsError("Invalid 'ligand_tup' of %r." % ligand_tup)
         if len(ligandseq) != len(ligandconf) + 1:
-            raise ConformationsError, "Ligand sequence of %r and ligand conformation of %r are of incompatible lengths." % (ligandseq, ligandconf)
+            raise ConformationsError("Ligand sequence of %r and ligand conformation of %r are of incompatible lengths." % (ligandseq, ligandconf))
         if not (isinstance(xshift, int) and isinstance(yshift, int)):
-            raise ConformationsError, "Invalid 'xshift', 'yshift' pair of %r, %r." % (xshift, yshift)
+            raise ConformationsError("Invalid 'xshift', 'yshift' pair of %r, %r." % (xshift, yshift))
         # make 'ligandseq' all lower case, as we will print lower case letters
         ligandseq = ''.join(ligandseq).lower()
         # now add the ligand residues/bonds to 'residue_coords'
@@ -855,7 +875,7 @@ def PrintConformation(seq, conf, file = sys.stdout, latex_format = False, ligand
         horizbond = "--- &" # horizontal bonds
         emptybond = " &"  # empty bond
         endline = " \\\\\n" # end of line
-        for (key, symbol) in residue_coords.iteritems():
+        for (key, symbol) in residue_coords.items():
             if symbol == '|':
                 residue_coords[key] = vertbond
             elif symbol == '-':

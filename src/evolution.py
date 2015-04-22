@@ -24,23 +24,23 @@ def NeutralEvolution(initialpop, stability, stabilitycutoff, popsize, mutrate, n
         use them to replace the old population.  All sequences
         are then mutated with a per site mutation rate of 'mutrate'.
     'initialpop' specifies the initial population.  It can be:
-	* a single sequence, in which case the initial population is clonal
-    	    copies of this sequence.  If it is a single sequence, it
-	    must be a string (not a list)!!!
-	* an integer, in which case the population is randomly generated
-	    sequences of the length specified by the integer.
-	* a list of sequences of length equal to 'popsize', giving
+        * a single sequence, in which case the initial population is clonal
+            copies of this sequence.  If it is a single sequence, it
+            must be a string (not a list)!!!
+        * an integer, in which case the population is randomly generated
+            sequences of the length specified by the integer.
+        * a list of sequences of length equal to 'popsize', giving
             the initial population.
     'stability' is the object used to evaluate the stability of 
-	protein sequences.  It must have a method 'Stability(seq)' 
+        protein sequences.  It must have a method 'Stability(seq)' 
         that returns the stability of 'seq', or 'None' if
         that sequence is unfolded.
     'popsize' is an integer > 0 specifying the population size.
     'mutrate' is the per residue per generation mutation rate.  
-	Each residue is randomly mutated with probability 'mutrate'
-	in each generation.  It is a number > 0 and < 1.0.
+        Each residue is randomly mutated with probability 'mutrate'
+        in each generation.  It is a number > 0 and < 1.0.
     'numsteps' is the number of steps for which the evolutionary trajectory
-	proceeds.  It is an integer > 0.
+        proceeds.  It is an integer > 0.
     'allproteinsfile' is a string giving the name of a file to which
         we write information on all proteins in the population at
         each generation.
@@ -53,13 +53,13 @@ def NeutralEvolution(initialpop, stability, stabilitycutoff, popsize, mutrate, n
         the listed stability may be 'None.'"""
     # do some error checking on the input variables
     if not isinstance(stabilitycutoff, (int, float)):
-        raise EvolutionError, "Invalid stability cutoff of %f." % stabilitycutoff
+        raise EvolutionError("Invalid stability cutoff of %f." % stabilitycutoff)
     if not (isinstance(popsize, int) and popsize > 0):
-        raise EvolutionError, "Invalid 'popsize' of %r." % popsize
+        raise EvolutionError("Invalid 'popsize' of %r." % popsize)
     if not (isinstance(numsteps, int) and numsteps > 0):
-        raise EvolutionError, "Invalid 'numsteps' of %r." % numsteps
+        raise EvolutionError("Invalid 'numsteps' of %r." % numsteps)
     if not 0.0 < mutrate < 1.0:
-        raise EvolutionError, "Invalid 'mutrate' of %r." % mutrate
+        raise EvolutionError("Invalid 'mutrate' of %r." % mutrate)
     # set the initial population
     if isinstance(initialpop, str): # single sequence, make clonal copies
         initialpop = [initialpop for i in range(popsize)]
@@ -67,9 +67,9 @@ def NeutralEvolution(initialpop, stability, stabilitycutoff, popsize, mutrate, n
         initialpop = [sequences.RandomSequence(initialpop) for i in range(popsize)]
     elif isinstance(initialpop, list): # random sequences from this list
         if len(initialpop) != popsize:
-            raise EvolutionError, "'initialpop' is of invalid size."
+            raise EvolutionError("'initialpop' is of invalid size.")
     else:
-        raise EvolutionError, "Invalid 'initialpop' of %r." % initialpop
+        raise EvolutionError("Invalid 'initialpop' of %r." % initialpop)
     # print some information
     file = open(allproteinsfile, 'w')
     file.write("Performing a neutral evolutionary run of %d steps.\n" % numsteps)
@@ -156,7 +156,7 @@ def NeutralEvolution(initialpop, stability, stabilitycutoff, popsize, mutrate, n
             else:
                 file.write("%d\t%.4f\t%.1f\t%d\t%s\t%d\t%d\t%d\n" % (istep, dGf, ifit, numsubs, seq, n, id, parent_id))
         if not atleastonealive:
-            raise EvolutionError, "No living sequences in population."
+            raise EvolutionError("No living sequences in population.")
         if istep >= numsteps:
             break
         # replace current population with offspring
@@ -178,76 +178,76 @@ def Evolution(initialpop, fitness, popsize, mutrate, numsteps, file = sys.stdout
     """Performs evolution of lattice proteins.
 
     Call is: 'finalpop = Evolution(fitness, popsize, mutrate, 
-	numsteps, [file = sys.stdout, targetfunction = None, 
-	allproteinsfile = None, dGincrement = 0.02, dGlist = {}])'
+        numsteps, [file = sys.stdout, targetfunction = None, 
+        allproteinsfile = None, dGincrement = 0.02, dGlist = {}])'
     This method evolves a population of proteins.  At each generation,
-	we choose 'popsize' offspring.  These offspring 
-	are identical copies of existing members of the population, with
-	the probability of a copy being from a member of the population
-	being proportional to the fitness of that member of the 
-	population.  These new sequences then replace the 
-	existing sequences in the population.  All
-	members of the population are then mutated with a per site
-	mutation rate of 'mutrate'.  A few points: the probability that
-	an offspring is from some parent is proportional to that parent's
-	fitness if the fitness is > 0 -- if the fitness is <= zero, then
-	the probability that an offspring is from some parent is zero.
-	However, if all members of the population have fitnesses <= 0,
-	then the offspring are randomly created from these parents
-	with equal probability.  Both the selection of parents and 
-	the mutation of sequences are stochastic.
+        we choose 'popsize' offspring.  These offspring 
+        are identical copies of existing members of the population, with
+        the probability of a copy being from a member of the population
+        being proportional to the fitness of that member of the 
+        population.  These new sequences then replace the 
+        existing sequences in the population.  All
+        members of the population are then mutated with a per site
+        mutation rate of 'mutrate'.  A few points: the probability that
+        an offspring is from some parent is proportional to that parent's
+        fitness if the fitness is > 0 -- if the fitness is <= zero, then
+        the probability that an offspring is from some parent is zero.
+        However, if all members of the population have fitnesses <= 0,
+        then the offspring are randomly created from these parents
+        with equal probability.  Both the selection of parents and 
+        the mutation of sequences are stochastic.
     'initialpop' specifies the initial population.  It can be:
-	* a single sequence, in which case the initial population is clonal
-    	    copies of this sequence.  If it is a single sequence, it
-	    must be a string (not a list)!!!
-	* an integer, in which case the population is randomly generated
-	    sequences of the length specified by the integer.
-	* a list of sequences.  If the length of the list is equal to 
-	    'popsize', then this list is the initial population.  If
-	    the length of this list is greater than 'popsize', then
-	    'popsize' sequences from the list are randomly chosen
-	    for the initial population.  If the length of the list
-	    is less than 'popsize', then additional sequences are 
-	    created as identical copies of randomly selected members of
-	    the list.
+        * a single sequence, in which case the initial population is clonal
+            copies of this sequence.  If it is a single sequence, it
+            must be a string (not a list)!!!
+        * an integer, in which case the population is randomly generated
+            sequences of the length specified by the integer.
+        * a list of sequences.  If the length of the list is equal to 
+            'popsize', then this list is the initial population.  If
+            the length of this list is greater than 'popsize', then
+            'popsize' sequences from the list are randomly chosen
+            for the initial population.  If the length of the list
+            is less than 'popsize', then additional sequences are 
+            created as identical copies of randomly selected members of
+            the list.
     'fitness' is the object used to evaluate the fitness of the protein
-	sequences.  It must have a method 'Fitness(seq)' such that
-	'fitness.Fitness(seq)' returns a number representing the fitness
-	of protein sequence 'seq', where 'seq' is a member of the population.
-	as 'initialseq'.  If 'file' is not 'None', it must also have a 
-	method 'Info(file)' that prints information about the fitness
-	evaluation to 'file'.  Fitnesses are numbers, larger numbers
-	imply higher fitness.  Note that any fitnesses less than zero
-	are set to zero for the purpose of specifying reproduction rate.
+        sequences.  It must have a method 'Fitness(seq)' such that
+        'fitness.Fitness(seq)' returns a number representing the fitness
+        of protein sequence 'seq', where 'seq' is a member of the population.
+        as 'initialseq'.  If 'file' is not 'None', it must also have a 
+        method 'Info(file)' that prints information about the fitness
+        evaluation to 'file'.  Fitnesses are numbers, larger numbers
+        imply higher fitness.  Note that any fitnesses less than zero
+        are set to zero for the purpose of specifying reproduction rate.
     'popsize' is an integer > 0 specifying the population size.
     'mutrate' is the per residue per generation mutation rate.  Each residue
-	in each sequence is randomly mutated with probability 'mutrate'
-	in each generation.  It is a number > 0 and < 1.0.
+        in each sequence is randomly mutated with probability 'mutrate'
+        in each generation.  It is a number > 0 and < 1.0.
     'numsteps' is the number of steps for which the evolutionary trajectory
-	proceeds.  It is an integer > 0.
+        proceeds.  It is an integer > 0.
     'file' is an optional argument specifying where the output information
-	for the walk is printed.  The default value is standard output
-	('file = sys.stdout').  If 'file' is set to an open writable
-	file-like object, then output is printed to that object instead.
-	If 'file' is set to 'None', then no output is printed.
+        for the walk is printed.  The default value is standard output
+        ('file = sys.stdout').  If 'file' is set to an open writable
+        file-like object, then output is printed to that object instead.
+        If 'file' is set to 'None', then no output is printed.
     'targetfunction' is an optional argument that tells us to stop when 
-	the evolutionary run reaches some target, rather than going for
-	'numsteps' steps.  By default, 'targetfunction' is 'None'.  To
-	set this option, set 'targetfunction' to the 3-tuple
-	'(function, targetvalue, range)'.  'function' is a method that
-	takes as input a single protein sequence and returns a number.
-	'targetvalue' is a number, and 'range' is a positive number.
-	As soon as the evolutionary run generates a sequence 'seq'
-	such that 'function(seq)' is within 'functionrange' of 'targetvalue',
-	the evolutionary run stops and 'seq' is returned as 'finalpop'.
-	If the target is not reached in 'numsteps' steps, an exception
-	is raised.
+        the evolutionary run reaches some target, rather than going for
+        'numsteps' steps.  By default, 'targetfunction' is 'None'.  To
+        set this option, set 'targetfunction' to the 3-tuple
+        '(function, targetvalue, range)'.  'function' is a method that
+        takes as input a single protein sequence and returns a number.
+        'targetvalue' is a number, and 'range' is a positive number.
+        As soon as the evolutionary run generates a sequence 'seq'
+        such that 'function(seq)' is within 'functionrange' of 'targetvalue',
+        the evolutionary run stops and 'seq' is returned as 'finalpop'.
+        If the target is not reached in 'numsteps' steps, an exception
+        is raised.
     'allproteinsfile' is an optional argument that specifies that we write
-	data giving the details of all proteins in the population at each
-	step of evolution.  The default value is 'None', meaning nothing
-	is written.  If it is set to a non-'None', it should be set to
-	a writable file-like object.  The data is then written to
-	this file, along with an explanatory header.
+        data giving the details of all proteins in the population at each
+        step of evolution.  The default value is 'None', meaning nothing
+        is written.  If it is set to a non-'None', it should be set to
+        a writable file-like object.  The data is then written to
+        this file, along with an explanatory header.
     'dGincrement' and 'dGlist' allow the program to keep track of 
         the stabilities of all of the proteins generated during the
         course of the evolutionary run.  This is done by passing
@@ -265,80 +265,80 @@ def Evolution(initialpop, fitness, popsize, mutrate, numsteps, file = sys.stdout
         default value of 'None' or a variable representing an empty
         list, and the 'dGincrement' must be greater than zero.
     The returned variable is the list 'finalpop' which gives all of the
-	sequences in the final population.  These sequences are sorted
-	from highest fitness to lowest fitness.  However, if 
-	'targetfunction' is set to a non-'None' value (see above) only
-	a single sequence is returned."""
+        sequences in the final population.  These sequences are sorted
+        from highest fitness to lowest fitness.  However, if 
+        'targetfunction' is set to a non-'None' value (see above) only
+        a single sequence is returned."""
     # do some error checking on the input variables
     if not (isinstance(popsize, int) and popsize > 0):
-	raise EvolutionError, "Invalid 'popsize' of %r." % popsize
+        raise EvolutionError("Invalid 'popsize' of %r." % popsize)
     if not (isinstance(numsteps, int) and numsteps > 0):
-	raise EvolutionError, "Invalid 'numsteps' of %r." % numsteps
+        raise EvolutionError("Invalid 'numsteps' of %r." % numsteps)
     if not 0.0 < mutrate < 1.0:
-	raise EvolutionError, "Invalid 'mutrate' of %r." % mutrate
+        raise EvolutionError("Invalid 'mutrate' of %r." % mutrate)
     if targetfunction == None:
-	pass
+        pass
     elif isinstance(targetfunction, tuple) and len(targetfunction) == 3:
-	(function, targetvalue, functionrange) = targetfunction
-	if not callable(function):
-	    raise EvolutionError, "'targetfunction[0]' is not callable."
-	if not isinstance(targetvalue, (int, float)):
-	    raise EvolutionError, "'targetfunction[1]' is not a number."
-	if not isinstance(functionrange, (int, float)) and functionrange >= 0.0:
-	    raise EvolutionError, "'targetfunction[2] is not a positive number."
+        (function, targetvalue, functionrange) = targetfunction
+        if not callable(function):
+            raise EvolutionError("'targetfunction[0]' is not callable.")
+        if not isinstance(targetvalue, (int, float)):
+            raise EvolutionError("'targetfunction[1]' is not a number.")
+        if not isinstance(functionrange, (int, float)) and functionrange >= 0.0:
+            raise EvolutionError("'targetfunction[2] is not a positive number.")
     else:
-	raise EvolutionError, "Invalid 'targetfunction' of %r." % targetfunction
+        raise EvolutionError("Invalid 'targetfunction' of %r." % targetfunction)
     if not (dGlist == [] or dGlist == None):
-        raise EvolutionError, "Invalid 'dGlist' of %r." % dGlist
+        raise EvolutionError("Invalid 'dGlist' of %r." % dGlist)
     if dGlist != None:
         dGlist.append(0)
     dGincrement = float(dGincrement)
     if not (isinstance(dGincrement, float) and dGincrement > 0):
-        raise EvolutionError, "Invalid 'dGincrement' of %r." % dGincrement
+        raise EvolutionError("Invalid 'dGincrement' of %r." % dGincrement)
     # set the initial population
     if isinstance(initialpop, str): # single sequence, make clonal copies
-	population = [initialpop for i in range(popsize)]
+        population = [initialpop for i in range(popsize)]
     elif isinstance(initialpop, int): # choose random sequences
-	population = [sequences.RandomSequence(initialpop) for i in range(popsize)]
+        population = [sequences.RandomSequence(initialpop) for i in range(popsize)]
     elif isinstance(initialpop, list): # random sequences from this list
-	if len(initialpop) == popsize:
-	    population = list(initialpop)
-	elif len(initialpop) > popsize:
-	    population = list(initialpop)
-	    random.shuffle(population)
-	    population = population[0 : popsize]
-	else:
-	    population = list(initialpop)
-	    while len(population) < popsize:
-		population.append(random.choice(population))
+        if len(initialpop) == popsize:
+            population = list(initialpop)
+        elif len(initialpop) > popsize:
+            population = list(initialpop)
+            random.shuffle(population)
+            population = population[0 : popsize]
+        else:
+            population = list(initialpop)
+            while len(population) < popsize:
+                population.append(random.choice(population))
     else:
-	raise EvolutionError, "Invalid 'initialpop' of %r." % initialpop
+        raise EvolutionError("Invalid 'initialpop' of %r." % initialpop)
     # print some information
     if file != None:
-	file.write("Performing an evolutionary run of %d steps.\n" % numsteps)
-	file.write("The population size is %d.\n" % popsize)
-	file.write("The per site per generation mutation rate is %f.\n" % mutrate)
-	if targetfunction:
-	    file.write("Evolving to a target.  Evolution continues until the value\n")
-	    file.write("returned by %r is within %f of %f." % (function, functionrange, targetvalue))
-	fitness.Info(file)
-	file.write("In column headings, 'F' is fitness, 'dG' is free energy of\n")
-	file.write("folding, and 'S' is the number of substitutions from ancestor.\n")
-	file.write("'<X>' is the mean of X, 'MED_X' is the median of X,\n")
-	file.write("'BEST_X' is the value of X for the most fit sequence,\n") 
-	file.write("'MOST_X' is the value of X for the most abundant sequence.\n")
-	file.write("STEP\tBEST_F\t<F>\tMED_F\tMOST_F\tBEST_dG\t<dG>\tMED_dG\tMOST_dG\tBEST_S\t<S>\tMED_S\tMOST_S\tBEST_SEQ\n")
+        file.write("Performing an evolutionary run of %d steps.\n" % numsteps)
+        file.write("The population size is %d.\n" % popsize)
+        file.write("The per site per generation mutation rate is %f.\n" % mutrate)
+        if targetfunction:
+            file.write("Evolving to a target.  Evolution continues until the value\n")
+            file.write("returned by %r is within %f of %f." % (function, functionrange, targetvalue))
+        fitness.Info(file)
+        file.write("In column headings, 'F' is fitness, 'dG' is free energy of\n")
+        file.write("folding, and 'S' is the number of substitutions from ancestor.\n")
+        file.write("'<X>' is the mean of X, 'MED_X' is the median of X,\n")
+        file.write("'BEST_X' is the value of X for the most fit sequence,\n") 
+        file.write("'MOST_X' is the value of X for the most abundant sequence.\n")
+        file.write("STEP\tBEST_F\t<F>\tMED_F\tMOST_F\tBEST_dG\t<dG>\tMED_dG\tMOST_dG\tBEST_S\t<S>\tMED_S\tMOST_S\tBEST_SEQ\n")
     if allproteinsfile != None:
-	allproteinsfile.write("Performing an evolutionary run of %d steps.\n" % numsteps)
-	allproteinsfile.write("The population size is %d.\n" % popsize)
-	allproteinsfile.write("The per site per generation mutation rate is %f.\n" % mutrate)
-	if targetfunction:
-	    allproteinsfile.write("Evolving to a target.  Evolution continues until the value\n")
-	    allproteinsfile.write("returned by %r is within %f of %f." % (function, functionrange, targetvalue))
-	fitness.Info(allproteinsfile)
-	allproteinsfile.write("In column headings, 'F' is fitness, 'dG' is free energy of\n")
-	allproteinsfile.write("folding, 'S' is the number of substitutions from ancestor,\n")
-	allproteinsfile.write("and 'N' is the number of these sequences in the population.\n")
+        allproteinsfile.write("Performing an evolutionary run of %d steps.\n" % numsteps)
+        allproteinsfile.write("The population size is %d.\n" % popsize)
+        allproteinsfile.write("The per site per generation mutation rate is %f.\n" % mutrate)
+        if targetfunction:
+            allproteinsfile.write("Evolving to a target.  Evolution continues until the value\n")
+            allproteinsfile.write("returned by %r is within %f of %f." % (function, functionrange, targetvalue))
+        fitness.Info(allproteinsfile)
+        allproteinsfile.write("In column headings, 'F' is fitness, 'dG' is free energy of\n")
+        allproteinsfile.write("folding, 'S' is the number of substitutions from ancestor,\n")
+        allproteinsfile.write("and 'N' is the number of these sequences in the population.\n")
         allproteinsfile.write("ID is the ID number of this sequence, and Parent_ID is\n")
         allproteinsfile.write("the ID of the sequence's parent, or 0 if this sequence\n")
         allproteinsfile.write("was in the original population.\n")
@@ -364,31 +364,31 @@ def Evolution(initialpop, fitness, popsize, mutrate, numsteps, file = sys.stdout
     # begin the evolutionary trajectory
     istep = 0
     while True:
-	# shuffle the population and substitutions lists
-	combined_list = zip(substitutions, population, ids, parent_ids)
-	random.shuffle(combined_list)
-	substitutions = [tup[0] for tup in combined_list]
-	population = [tup[1] for tup in combined_list]
+        # shuffle the population and substitutions lists
+        combined_list = zip(substitutions, population, ids, parent_ids)
+        random.shuffle(combined_list)
+        substitutions = [tup[0] for tup in combined_list]
+        population = [tup[1] for tup in combined_list]
         ids = [tup[2] for tup in combined_list]
         parent_ids = [tup[3] for tup in combined_list]
-	# evaluate the fitnesses
-	fitnesses = [max(0.0, fitness.Fitness(seq)) for seq in population]
-	# evaluate the stabilities 
-	stabilities = [fitness.Stability(seq) for seq in population]
-	# compute the best fitness and the "total fitness"
-	bestfit = fitnesses[0]
-	bestseq = population[0]
-	beststab = stabilities[0]
-	bestsubs = substitutions[0]
-	totalfitness = 0.0
-	for i in range(len(fitnesses)):
-	    ifit = fitnesses[i]
-	    totalfitness += ifit
-	    if ifit > bestfit:
-		bestfit = ifit
-		bestseq = population[i]
-		beststab = stabilities[i]
-		bestsubs = substitutions[i]
+        # evaluate the fitnesses
+        fitnesses = [max(0.0, fitness.Fitness(seq)) for seq in population]
+        # evaluate the stabilities 
+        stabilities = [fitness.Stability(seq) for seq in population]
+        # compute the best fitness and the "total fitness"
+        bestfit = fitnesses[0]
+        bestseq = population[0]
+        beststab = stabilities[0]
+        bestsubs = substitutions[0]
+        totalfitness = 0.0
+        for i in range(len(fitnesses)):
+            ifit = fitnesses[i]
+            totalfitness += ifit
+            if ifit > bestfit:
+                bestfit = ifit
+                bestseq = population[i]
+                beststab = stabilities[i]
+                bestsubs = substitutions[i]
             if dGlist:
                 istab = stabilities[i]
                 if istab > 0:
@@ -400,72 +400,72 @@ def Evolution(initialpop, fitness, popsize, mutrate, numsteps, file = sys.stdout
                     except IndexError:
                         dGlist += [0] * (dGlist_index + 1 - len(dGlist))
                         dGlist[dGlist_index] += 1
-	# write information to file
-	if file != None:
-	    # find the most abundant sequence
-	    most_seq = sequences.MostAbundant(population)
-	    most_index = population.index(most_seq)
-	    most_fitness = fitnesses[most_index]
-	    most_stability = stabilities[most_index]
-	    most_substitutions = substitutions[most_index]
-	    # write the information to the file
-    	    file.write("%d\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.2f\t%.2f\t%.2f\t%.2f\t%s\n" % (istep, bestfit, stats.Mean(fitnesses), stats.Median(fitnesses), most_fitness, beststab, stats.Mean(stabilities), stats.Median(stabilities), most_stability, bestsubs, stats.Mean(substitutions), stats.Median(substitutions), most_substitutions, ''.join(bestseq)))
-	if allproteinsfile != None:
-	    prot_dict = {}
-	    for i in range(len(fitnesses)):
-		try:
-    		    prot_dict[(istep, stabilities[i], fitnesses[i], substitutions[i], ''.join(population[i]), ids[i], parent_ids[i])] += 1
-		except KeyError:
-    		    prot_dict[(istep, stabilities[i], fitnesses[i], substitutions[i], ''.join(population[i]), ids[i], parent_ids[i])] = 1
-	    for (tup, n_in_pop) in prot_dict.iteritems():
-	      	allproteinsfile.write("%d\t%.4f\t%.4f\t%.2f\t%s\t%d\t%d\t%d\n" % (tup[0], tup[1], tup[2], tup[3], tup[4], n_in_pop, tup[5], tup[6]))
-	# see if we have met the targetfunction
-	if targetfunction:
-	    for seq in population:
-		if math.fabs(function(seq) - targetvalue) <= functionrange:
-		    return ''.join(seq)
-	# see if we are done
-	if istep >= numsteps:
-	    if targetfunction:
-		raise EvolutionError, "Failed to reach the target function."
-	    break
-	# choose the offspring 
-	cumulative_fitnesses = []
-	cumulative_total = 0.0
-	for f in fitnesses:
-	    try:
-	    	x = f / totalfitness
-	    except ZeroDivisionError:
-		x = 1.0 / popsize
-	    cumulative_total += x
-	    cumulative_fitnesses.append(cumulative_total)
-	newsequences = []
-	newsubstitutions = []
+        # write information to file
+        if file != None:
+            # find the most abundant sequence
+            most_seq = sequences.MostAbundant(population)
+            most_index = population.index(most_seq)
+            most_fitness = fitnesses[most_index]
+            most_stability = stabilities[most_index]
+            most_substitutions = substitutions[most_index]
+            # write the information to the file
+            file.write("%d\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.2f\t%.2f\t%.2f\t%.2f\t%s\n" % (istep, bestfit, stats.Mean(fitnesses), stats.Median(fitnesses), most_fitness, beststab, stats.Mean(stabilities), stats.Median(stabilities), most_stability, bestsubs, stats.Mean(substitutions), stats.Median(substitutions), most_substitutions, ''.join(bestseq)))
+        if allproteinsfile != None:
+            prot_dict = {}
+            for i in range(len(fitnesses)):
+                try:
+                    prot_dict[(istep, stabilities[i], fitnesses[i], substitutions[i], ''.join(population[i]), ids[i], parent_ids[i])] += 1
+                except KeyError:
+                    prot_dict[(istep, stabilities[i], fitnesses[i], substitutions[i], ''.join(population[i]), ids[i], parent_ids[i])] = 1
+            for (tup, n_in_pop) in prot_dict.iteritems():
+                allproteinsfile.write("%d\t%.4f\t%.4f\t%.2f\t%s\t%d\t%d\t%d\n" % (tup[0], tup[1], tup[2], tup[3], tup[4], n_in_pop, tup[5], tup[6]))
+        # see if we have met the targetfunction
+        if targetfunction:
+            for seq in population:
+                if math.fabs(function(seq) - targetvalue) <= functionrange:
+                    return ''.join(seq)
+        # see if we are done
+        if istep >= numsteps:
+            if targetfunction:
+                raise EvolutionError("Failed to reach the target function.")
+            break
+        # choose the offspring 
+        cumulative_fitnesses = []
+        cumulative_total = 0.0
+        for f in fitnesses:
+            try:
+                x = f / totalfitness
+            except ZeroDivisionError:
+                x = 1.0 / popsize
+            cumulative_total += x
+            cumulative_fitnesses.append(cumulative_total)
+        newsequences = []
+        newsubstitutions = []
         new_ids = []
         new_parent_ids = []
-	for inew in range(popsize):
-	    x = random.random() # random number from zero to 1
-	    if x <= cumulative_fitnesses[0]:
-		iseq = 0
-	    else:
-    		for iseq in range(1, len(cumulative_fitnesses)):
-    		    if cumulative_fitnesses[iseq] >= x >= cumulative_fitnesses[iseq - 1]:
-    			break
-    		else:
-    		    if not -1e-5 <= cumulative_fitnesses[iseq] - x <= 1e-5:
-    			raise EvolutionError, "Error choosing offspring: %r, %r, %r." % (x, cumulative_fitnesses[iseq], iseq)
-	    newsequences.append(population[iseq])
-	    newsubstitutions.append(substitutions[iseq])
+        for inew in range(popsize):
+            x = random.random() # random number from zero to 1
+            if x <= cumulative_fitnesses[0]:
+                iseq = 0
+            else:
+                for iseq in range(1, len(cumulative_fitnesses)):
+                    if cumulative_fitnesses[iseq] >= x >= cumulative_fitnesses[iseq - 1]:
+                        break
+                else:
+                    if not -1e-5 <= cumulative_fitnesses[iseq] - x <= 1e-5:
+                        raise EvolutionError("Error choosing offspring: %r, %r, %r." % (x, cumulative_fitnesses[iseq], iseq))
+            newsequences.append(population[iseq])
+            newsubstitutions.append(substitutions[iseq])
             new_ids.append(ids[iseq])
             new_parent_ids.append(parent_ids[iseq])
-	# replace current population with offspring
-	population = newsequences
-	substitutions = newsubstitutions
+        # replace current population with offspring
+        population = newsequences
+        substitutions = newsubstitutions
         ids = new_ids
         parent_ids = new_parent_ids
-	# mutate all sequences
-	for i in range(len(population)):
-	    oldseq = population[i]
+        # mutate all sequences
+        for i in range(len(population)):
+            oldseq = population[i]
             newseq = ''.join(sequences.MutateSequence(oldseq, mutrate))
             if oldseq != newseq:
                 population[i] = newseq 
@@ -473,16 +473,16 @@ def Evolution(initialpop, fitness, popsize, mutrate, numsteps, file = sys.stdout
                 parent_ids[i] = ids[i]
                 ids[i] = idcounter
                 idcounter += 1
-	istep += 1
+        istep += 1
     # sort the population from highest to lowest fitness
     decorated_list = []
     for i in range(len(population)):
-	decorated_list.append((fitnesses[i], population[i]))
+        decorated_list.append((fitnesses[i], population[i]))
     decorated_list.sort()
     decorated_list.reverse()
     population = []
     for x in decorated_list:
-	population.append(x[1])
+        population.append(x[1])
     # return the final population
     return population
 #---------------------------------------------------------------------------
@@ -490,17 +490,17 @@ def AdaptiveWalk(initialseq, fitness, maxsteps, fitness_cutoff=None, steepest_as
     """Performs an adaptive walk or a steepest ascent walk.
 
     Call is: '(seq, f, n) = AdaptiveWalk(initialseq, fitness, maxsteps,
-	[fitness_cutoff = None, steepest_ascent = False, file = sys.stdout])'
+        [fitness_cutoff = None, steepest_ascent = False, file = sys.stdout])'
     This method performs an adaptive walk by creating single point
-	mutants of a sequence and selecting more fit ones, and then
-	repeating this procedure.  The walk 
-	can proceed as either an adaptive walk, where the first 
-	sequence more fit than wild-type from the previous generation
-	is selected, or as a steepest ascent walk, where the point
-	mutant that leads to the largest improvement over the wild-type
-	is selected.  In either case, the walk terminates when no mutants
-	have a higher sequence than wild-type or when the fitness reaches
-	some specified cutoff.
+        mutants of a sequence and selecting more fit ones, and then
+        repeating this procedure.  The walk 
+        can proceed as either an adaptive walk, where the first 
+        sequence more fit than wild-type from the previous generation
+        is selected, or as a steepest ascent walk, where the point
+        mutant that leads to the largest improvement over the wild-type
+        is selected.  In either case, the walk terminates when no mutants
+        have a higher sequence than wild-type or when the fitness reaches
+        some specified cutoff.
     'initialseq' is a string or list specifying the protein sequence
         from which the adaptive walk begins.
     'fitness' is the object used to evaluate the fitness of the protein
@@ -535,27 +535,27 @@ def AdaptiveWalk(initialseq, fitness, maxsteps, fitness_cutoff=None, steepest_as
         acids in the lists for that residue are not allowed to be taken
         as steps on the walk.
     The returned variable is the 3-tuple '(seq, f, n)'.  'seq' is the 
-	fitness of the best protein reached by the walk.  'f' is the
-	fitness of 'seq'.  'n' is the number of steps used in the
-	adaptive walk."""
+        fitness of the best protein reached by the walk.  'f' is the
+        fitness of 'seq'.  'n' is the number of steps used in the
+        adaptive walk."""
     # Do some error checking on the input variables
     if not (fitness_cutoff == None or isinstance(fitness_cutoff, (int, float))):
-        raise EvolutionError, "Invalid 'fitness_cutoff' of %r." % fitness_cutoff
+        raise EvolutionError("Invalid 'fitness_cutoff' of %r." % fitness_cutoff)
     if not steepest_ascent in [True, False]:
-        raise EvolutionError, "Invalid 'steepest_ascent' of %r." % steepest_ascent
+        raise EvolutionError("Invalid 'steepest_ascent' of %r." % steepest_ascent)
     if not (isinstance(maxsteps, int) and maxsteps > 0):
-        raise EvolutionError, "Invalid 'maxsteps' of %r." % maxsteps
+        raise EvolutionError("Invalid 'maxsteps' of %r." % maxsteps)
     # make sure we can evaluate the fitness of the sequence
     try:
         initialf = fitness.Fitness(initialseq)
     except:
-        raise EvolutionError, "Cannot evaluate the fitness of 'initialseq' with 'fitness'."
+        raise EvolutionError("Cannot evaluate the fitness of 'initialseq' with 'fitness'.")
     # print initial information about walk
     if file != None:
         if steepest_ascent:
             file.write("Performing a steepest ascent walk of up to %d steps.\n" % maxsteps)
         else:
-    	    file.write("Performing an adaptive walk of up to %d steps.\n" % maxsteps)
+            file.write("Performing an adaptive walk of up to %d steps.\n" % maxsteps)
         fitness.Info(file)
         file.write("The initial sequence is %s, and has a fitness of %.3f.\n" % (''.join(initialseq), initialf))
         file.write("STEP\tFITNESS\tSEQUENCE\n")
@@ -606,66 +606,66 @@ def GenerateRandomFoldingSequences(length, numtries, temp, walksteps, numcontact
     """Generates a list of folding sequences.
 
     Call is: 'seqlist = GenerateRandomFoldingSequences(length, numseqs, 
-	temp, walksteps, numcontacts, [stability_cutoff = 0.0,
-	steepest_ascent = False])'
+        temp, walksteps, numcontacts, [stability_cutoff = 0.0,
+        steepest_ascent = False])'
     This method generates random sequences that fold to a stable structure. 
-	It does this by choosing a random starting sequence and performing
-	an adaptive walk from that sequence.
+        It does this by choosing a random starting sequence and performing
+        an adaptive walk from that sequence.
     'length' is an integer > 0 specifying the length of the sequences generated.
     'numtries' is an integer > 0 specifying how many folding sequences we
-	try to generate.  The number actually generated may be lower if some
-	of the attempted adaptive walks fail to find a folding sequence.
+        try to generate.  The number actually generated may be lower if some
+        of the attempted adaptive walks fail to find a folding sequence.
     'temp' is the temperature at which the sequences are folded.
     'walksteps' is the maximum number of steps attempted in the adaptive walks.
     'numcontacts' is the number of contacts which the folded sequence must
-	have.  If 'numcontacts' is 'None', then any conformation with any
-	number of contacts is OK.  If 'numcontacts' is an integer > 0, then
-	we require the folded sequence to have this number of contacts.
-	This is done by randomly choosing one of the unique conformations
-	with this many contacts, and then selecting for the ability of
-	the sequences to fold to this conformation.
+        have.  If 'numcontacts' is 'None', then any conformation with any
+        number of contacts is OK.  If 'numcontacts' is an integer > 0, then
+        we require the folded sequence to have this number of contacts.
+        This is done by randomly choosing one of the unique conformations
+        with this many contacts, and then selecting for the ability of
+        the sequences to fold to this conformation.
     'stability_cutoff' specifies the stability that the folding sequences
-	must achieve.  They must have a free energy of folding <= 
-	'stability_cutoff'.  The adaptive walks terminate when this
-	cutoff is reached.  The default value is 0.0.
+        must achieve.  They must have a free energy of folding <= 
+        'stability_cutoff'.  The adaptive walks terminate when this
+        cutoff is reached.  The default value is 0.0.
     'steepest_ascent' specifies whether the adaptive walk used to find the
-	folding sequences is an adaptive walk or a steepest ascent walk.
-	The default value is 'False', meaning it is an adaptive walk.  Set
-	this argument to 'True' to get a steepest ascent walk.
+        folding sequences is an adaptive walk or a steepest ascent walk.
+        The default value is 'False', meaning it is an adaptive walk.  Set
+        this argument to 'True' to get a steepest ascent walk.
     The returned variable is the list 'seqlist'.  This is simply a list of
-	all of the folding sequences, as strings, that have been found."""
+        all of the folding sequences, as strings, that have been found."""
     # do some checking on input variables
     if not isinstance(stability_cutoff, (int, float)):
-	raise EvolutionError, "Invalid 'stability_cutoff' of %r." % stability_cutoff
+        raise EvolutionError("Invalid 'stability_cutoff' of %r." % stability_cutoff)
     if not (isinstance(length, int) and length > 0):
-	raise EvolutionError, "Invalid 'length' of %r." % length
+        raise EvolutionError("Invalid 'length' of %r." % length)
     if not (isinstance(numtries, int) and numtries > 0):
-	raise EvolutionError, "Invalid 'numtries' of %r." % numtries
+        raise EvolutionError("Invalid 'numtries' of %r." % numtries)
     if not (isinstance(walksteps, int) and walksteps > 0):
-	raise EvolutionError, "Invalid 'walksteps' of %r." % walksteps
+        raise EvolutionError("Invalid 'walksteps' of %r." % walksteps)
     if not (numcontacts == None or (isinstance(numcontacts, int) and numcontacts > 0)):
-	raise EvolutionError, "Invalid 'numcontacts' of %r." % numcontacts 
+        raise EvolutionError("Invalid 'numcontacts' of %r." % numcontacts)
     if not (isinstance(temp, (float, int)) and temp > 0):
-	raise EvolutionError, "Invalid 'temp' of %r." % temp
+        raise EvolutionError("Invalid 'temp' of %r." % temp)
     # create the 'Conformations' object to fold the proteins
     c = conformations.Conformations(length)
     if numcontacts == None:
-	f = fitness.Fitness(temp, c, 'negstability', None)
+        f = fitness.Fitness(temp, c, 'negstability', None)
     elif not c.UniqueConformations(numcontacts):
-	raise EvolutionError, "No conformations with %r contacts." % numcontacts
+        raise EvolutionError("No conformations with %r contacts." % numcontacts)
     seqlist = []
     # begin trying to generate the conformations
     for itry in range(numtries):
-	# recreate the fitness object if necessary
-	if numcontacts:
-	    f = fitness.Fitness(temp, c, 'negstability', random.choice(c.UniqueConformations(numcontacts)))
-	# create the initial sequence
-	s = sequences.RandomSequence(length)
-	# do the adaptive walk
-	(bestseq, bestfit, nsteps) = AdaptiveWalk(s, f, walksteps, fitness_cutoff = - stability_cutoff, steepest_ascent = steepest_ascent)
-	# see if the sequence is stable enough
-	if bestfit >= -stability_cutoff: 
-	    seqlist.append(''.join(bestseq))
+        # recreate the fitness object if necessary
+        if numcontacts:
+            f = fitness.Fitness(temp, c, 'negstability', random.choice(c.UniqueConformations(numcontacts)))
+        # create the initial sequence
+        s = sequences.RandomSequence(length)
+        # do the adaptive walk
+        (bestseq, bestfit, nsteps) = AdaptiveWalk(s, f, walksteps, fitness_cutoff = - stability_cutoff, steepest_ascent = steepest_ascent)
+        # see if the sequence is stable enough
+        if bestfit >= -stability_cutoff: 
+            seqlist.append(''.join(bestseq))
     # return the list of folding sequences
     return seqlist
 #---------------------------------------------------------------------------
@@ -673,29 +673,29 @@ def FracViable(seq, fitness, fitness_cutoff, nmutations, nsampled = 'ALL'):
     """Computes the fraction of mutants that are viable.
 
     Call is: 'frac = FracViable(seq, fitness, fitness_cutoff, nmutations, 
-	[nsampled = 'ALL'])'
+        [nsampled = 'ALL'])'
     'seq' is the wild-type sequence which we are mutating, as a string or list.
     'fitness' is the object used to evaluate the fitness of the protein
-	sequences.  It must have a method 'Fitness(seq)' such that
-	'fitness.Fitness(seq)' returns a number representing the fitness
-	of protein sequence 'seq'.
+        sequences.  It must have a method 'Fitness(seq)' such that
+        'fitness.Fitness(seq)' returns a number representing the fitness
+        of protein sequence 'seq'.
     'fitness_cutoff' specifies the minimum fitness a protein must have
-	to be viable.  Any protein with fitness >= 'fitness_cutoff' is
-	viable; otherwise it is not viable.
+        to be viable.  Any protein with fitness >= 'fitness_cutoff' is
+        viable; otherwise it is not viable.
     'nmutations' specifies how many mutations to perform.  If it is one
-	we sample single mutants, if it is two we sample double mutants,
-	et cetera.  
+        we sample single mutants, if it is two we sample double mutants,
+        et cetera.  
     'nsampled' specifies how many of the mutants we sample.
-	The default value is 'ALL', which means we sample all mutants.
-	'ALL' is a valid value when 'nmutations' is one or two.  'nsampled'
-	can also be an integer > 0, which means that we sample 'nsampled'
-	randomly chosen mutants with 'nmutations' mutations.  In this case,
-	the same mutation may be sampled multiple times.
+        The default value is 'ALL', which means we sample all mutants.
+        'ALL' is a valid value when 'nmutations' is one or two.  'nsampled'
+        can also be an integer > 0, which means that we sample 'nsampled'
+        randomly chosen mutants with 'nmutations' mutations.  In this case,
+        the same mutation may be sampled multiple times.
     The returned variable is the number 'frac'.  This is simply the fraction
-	of all of that mutants sampled that were viable."""
+        of all of that mutants sampled that were viable."""
     # do some error checking on the initial variables
     if not isinstance(fitness_cutoff, (int, float)):
-	raise EvolutionError, "Invalid 'fitness_cutoff' of %r." % fitness_cutoff
+        raise EvolutionError("Invalid 'fitness_cutoff' of %r." % fitness_cutoff)
     # compute the wild-type fitness
     wt_fit = fitness.Fitness(seq)
     # compute the spectrum of mutation induced fitness changes
@@ -703,57 +703,57 @@ def FracViable(seq, fitness, fitness_cutoff, nmutations, nsampled = 'ALL'):
     # compute the fraction viable
     nviable = 0
     for imut in spectrum:
-	if wt_fit + imut >= fitness_cutoff:
-	    nviable += 1
+        if wt_fit + imut >= fitness_cutoff:
+            nviable += 1
     # return the fraction
     try:
-	return float(nviable) / len(spectrum)
+        return float(nviable) / len(spectrum)
     except ZeroDivisionError:
-	raise EvolutionError, "No sequences for which to evaluate viability."
+        raise EvolutionError("No sequences for which to evaluate viability.")
 #----------------------------------------------------------------------
 def MutationSpectrum(seq, fitness, nmutations, nsampled = 'ALL'):
     """Computes the spectrum of effects of mutations.
 
     Call is: 'spectrum = MutationSpectrum(seq, fitness, nmutations, 
-	[nsampled = 'ALL'])'
+        [nsampled = 'ALL'])'
     Creates a list of the effects of mutations on the fitness of a sequence.
     'seq' is the wild-type sequence which we are mutating, as a string or list.
     'fitness' is the object used to evaluate the fitness of the protein
-	sequences.  It must have a method 'Fitness(seq)' such that
-	'fitness.Fitness(seq)' returns a number representing the fitness
-	of protein sequence 'seq'.
+        sequences.  It must have a method 'Fitness(seq)' such that
+        'fitness.Fitness(seq)' returns a number representing the fitness
+        of protein sequence 'seq'.
     'nmutations' specifies how many mutations to perform.  If it is one
-	we sample single mutants, if it is two we sample double mutants,
-	et cetera.  
+        we sample single mutants, if it is two we sample double mutants,
+        et cetera.  
     'nsampled' specifies how many of the mutants we sample.
-	The default value is 'ALL', which means we sample all mutants.
-	'ALL' is a valid value when 'nmutations' is one or two.  'nsampled'
-	can also be an integer > 0, which means that we sample 'nsampled'
-	randomly chosen mutants with 'nmutations' mutations.  In this case,
-	the same mutation may be sampled multiple times.
+        The default value is 'ALL', which means we sample all mutants.
+        'ALL' is a valid value when 'nmutations' is one or two.  'nsampled'
+        can also be an integer > 0, which means that we sample 'nsampled'
+        randomly chosen mutants with 'nmutations' mutations.  In this case,
+        the same mutation may be sampled multiple times.
     The returned variable is the list 'spectrum'.  Each entry in this
-	list is the change in fitness, computed as the fitness of
-	the mutant protein minus the fitness of the wild-type protein,
-	for a particular mutation."""
+        list is the change in fitness, computed as the fitness of
+        the mutant protein minus the fitness of the wild-type protein,
+        for a particular mutation."""
     # do some error checking on the initial variables
     if not (isinstance(nmutations, int) and nmutations > 0):
-	raise EvolutionError, "Invalid 'nmutations' of %r." % nmutations
+        raise EvolutionError("Invalid 'nmutations' of %r." % nmutations)
     if nsampled == 'ALL' and nmutations in [1, 2]:
-	pass
+        pass
     elif not (isinstance(nsampled, int) and nsampled > 0):
-	raise MutantError, "Invalid 'nsampled' of %r." % nsampled
+        raise MutantError("Invalid 'nsampled' of %r." % nsampled)
     # make sure we can evaluate the fitness of the sequence
     try:
-	wt_fit = fitness.Fitness(seq)
+        wt_fit = fitness.Fitness(seq)
     except:
-	error_msg = sys.exc_info()[1]
-	raise EvolutionError, "Cannot evaluate the fitness of 'seq' with 'fitness': %r" % error_msg
+        error_msg = sys.exc_info()[1]
+        raise EvolutionError("Cannot evaluate the fitness of 'seq' with 'fitness': %r" % error_msg)
     # now start sampling the mutants
     spectrum = []
     mutants = sequences.NMutants(seq, nmutations, nsampled)
     for mutseq in mutants:
-	mut_fit = fitness.Fitness(mutseq)
-	spectrum.append(mut_fit - wt_fit)
+        mut_fit = fitness.Fitness(mutseq)
+        spectrum.append(mut_fit - wt_fit)
     return spectrum
 #---------------------------------------------------------------------------
 # End evolution.py

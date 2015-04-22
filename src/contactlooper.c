@@ -10,6 +10,27 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+// Handleing the String and Int conversions from Python 2 to 3
+#if PY_MAJOR_VERSION >= 3
+    #define PyInt_AS_LONG PyLong_AS_LONG
+    #define PyString_AS_STRING PyBytes_AS_STRING
+#endif
+// Changes in module initialization
+#if PY_MAJOR_VERSION >= 3
+  #define MOD_ERROR_VAL NULL
+  #define MOD_SUCCESS_VAL(val) val
+  #define MOD_INIT(name) PyMODINIT_FUNC PyInit_##name(void)
+  #define MOD_DEF(ob, name, doc, methods) \
+          static struct PyModuleDef moduledef = { \
+            PyModuleDef_HEAD_INIT, name, doc, -1, methods, }; \
+          ob = PyModule_Create(&moduledef);
+#else
+  #define MOD_ERROR_VAL
+  #define MOD_SUCCESS_VAL(val)
+  #define MOD_INIT(name) void init##name(void)
+  #define MOD_DEF(ob, name, doc, methods) \
+          ob = Py_InitModule3(name, methods, doc);
+#endif
 //
 // 'ContactLooper' error for module
 static PyObject *ContactLooperError;
@@ -126,7 +147,7 @@ static PyObject *TargetLooper(PyObject *self, PyObject *args) {
     static char *c_targetconf; 
     char *targetconfstring;
     // Parse the arguments 
-    if (! PyArg_ParseTuple(args, "O!O!O!dO!O!id", &PyList_Type, &res_interactions, &PyList_Type, &contactsets, &PyList_Type, &contactsetdegeneracy, &temp, &PyString_Type, &targetconf, &PyList_Type, &contactsetconformation, &use_dGf_cutoff, &dGf_cutoff)) { 
+    if (! PyArg_ParseTuple(args, "O!O!O!dO!O!id", &PyList_Type, &res_interactions, &PyList_Type, &contactsets, &PyList_Type, &contactsetdegeneracy, &temp, &PyUnicode_Type, &targetconf, &PyList_Type, &contactsetconformation, &use_dGf_cutoff, &dGf_cutoff)) { 
         PyErr_SetString(ContactLooperError, "Error parsing arguments."); 
         return NULL;
     }
@@ -241,15 +262,34 @@ static char contactlooper_doc[] = "Module implementing loops over contact sets.\
 static PyMethodDef contactlooper_methods[] = {{"NoTargetLooper", (PyCFunction) NoTargetLooper, METH_VARARGS, NoTargetLooper_doc}, {"TargetLooper", (PyCFunction) TargetLooper, METH_VARARGS, TargetLooper_doc}, {NULL}};
 //
 // Initialization function for the module
-void initcontactlooper(void) {
+//void initcontactlooper(void) {
+    //PyObject *m;
+    //m = Py_InitModule3("contactlooper", contactlooper_methods, contactlooper_doc);
+    //ContactLooperError = PyErr_NewException("contactlooper.ContactLooperError", NULL, NULL);
+    //if (ContactLooperError == NULL) {
+	//PyErr_SetString(ContactLooperError, "Could not ready the 'ContactLooperError' type.");
+	//return;
+    //}
+    //Py_INCREF(ContactLooperError);
+    //PyModule_AddObject(m, "ContactLooperError", ContactLooperError);
+    //}
+// End contactlooper.c
+
+
+// NEW STUFF
+MOD_INIT(contactlooper){
     PyObject *m;
-    m = Py_InitModule3("contactlooper", contactlooper_methods, contactlooper_doc);
+    
+    MOD_DEF(m, "contactlooper", contactlooper_doc, contactlooper_methods)
+        
+    if (m == NULL)
+        return MOD_ERROR_VAL;
+
     ContactLooperError = PyErr_NewException("contactlooper.ContactLooperError", NULL, NULL);
     if (ContactLooperError == NULL) {
-	PyErr_SetString(ContactLooperError, "Could not ready the 'ContactLooperError' type.");
-	return;
+    	PyErr_SetString(ContactLooperError, "Could not ready the 'ContactLooperError' type.");
     }
-    Py_INCREF(ContactLooperError);
+    
     PyModule_AddObject(m, "ContactLooperError", ContactLooperError);
+    return MOD_SUCCESS_VAL(m);    
 }
-// End contactlooper.c
