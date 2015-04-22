@@ -262,21 +262,6 @@ static char contactlooper_doc[] = "Module implementing loops over contact sets.\
 static PyMethodDef contactlooper_methods[] = {{"NoTargetLooper", (PyCFunction) NoTargetLooper, METH_VARARGS, NoTargetLooper_doc}, {"TargetLooper", (PyCFunction) TargetLooper, METH_VARARGS, TargetLooper_doc}, {NULL}};
 //
 // Initialization function for the module
-//void initcontactlooper(void) {
-    //PyObject *m;
-    //m = Py_InitModule3("contactlooper", contactlooper_methods, contactlooper_doc);
-    //ContactLooperError = PyErr_NewException("contactlooper.ContactLooperError", NULL, NULL);
-    //if (ContactLooperError == NULL) {
-	//PyErr_SetString(ContactLooperError, "Could not ready the 'ContactLooperError' type.");
-	//return;
-    //}
-    //Py_INCREF(ContactLooperError);
-    //PyModule_AddObject(m, "ContactLooperError", ContactLooperError);
-    //}
-// End contactlooper.c
-
-
-// NEW STUFF
 MOD_INIT(contactlooper){
     PyObject *m;
     
